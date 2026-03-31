@@ -21,7 +21,8 @@ export const Auto: React.FC<AutoProps> = ({
   // Debounce filtering
   useEffect(() => {
     const handler = setTimeout(() => {
-      if (inputValue === '') {
+      const trimmedValue = inputValue.trim();
+      if (trimmedValue  === '') {
         setSuggestions(data);
       } else {
         const filtered = data.filter(person =>
@@ -53,9 +54,11 @@ export const Auto: React.FC<AutoProps> = ({
   };
 
   return (
-    <div className={`dropdown ${dropdownActive ? 'is-active' : ''}`} style={{ width: '300px' }}>
+    <div
+      className={`dropdown ${dropdownActive ? 'is-active' : ''}`}
+      style={{ width: '300px' }}
+    >
       <div className="dropdown-trigger">
-
         <input
           type="text"
           className="input"
@@ -75,9 +78,12 @@ export const Auto: React.FC<AutoProps> = ({
 
       {dropdownActive && (
         <div className="dropdown-menu" role="menu">
-          <div className="dropdown-content"  data-cy="suggestions-list">
+          <div className="dropdown-content" data-cy="suggestions-list">
             {suggestions.length === 0 ? (
-              <div className="dropdown-item has-text-danger"  data-cy="no-suggestions-message">
+              <div
+                className="dropdown-item has-text-danger"
+                data-cy="no-suggestions-message"
+              >
                 No matching suggestions
               </div>
             ) : (
