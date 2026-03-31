@@ -15,7 +15,7 @@ export const Auto: React.FC<AutoProps> = ({
 }) => {
   const [inputValue, setInputValue] = useState('');
   const [suggestions, setSuggestions] = useState<Person[]>([]);
-  const [dropdownActive, setDropdownActive] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
 
   // Debounce filtering
@@ -24,22 +24,22 @@ export const Auto: React.FC<AutoProps> = ({
       const trimmedValue = inputValue.trim();
 
       if (trimmedValue === '') {
-        // якщо інпут порожній або тільки пробіли — не показуємо підказок
-        setSuggestions([]);
-        setDropdownActive(false); // закриваємо dropdown
+        // Якщо інпут порожній, але відкритий — показуємо всі дані
+        if (isDropdownOpen) {
+          setSuggestions(data);
+        } else {
+          setSuggestions([]);
+        }
       } else {
-        // фільтруємо тільки непорожній trimmedValue
         const filtered = data.filter(person =>
           person.name.toLowerCase().includes(trimmedValue.toLowerCase()),
         );
-
         setSuggestions(filtered);
-        setDropdownActive(true); // відкриваємо dropdown лише якщо є текст
       }
     }, debounceTime);
 
     return () => clearTimeout(handler);
-  }, [inputValue, data, debounceTime]);
+  }, [inputValue, data, debounceTime, isDropdownOpen]);
 
   // Reset selected person if input changes
   useEffect(() => {
@@ -53,11 +53,11 @@ export const Auto: React.FC<AutoProps> = ({
     setInputValue(person.name);
     setSelectedPerson(person);
     onSelected(person);
-    setDropdownActive(false);
+    setIsDropdownOpen(false);
   };
 
   return (
-    <div className="dropdown" style={{ width: '300px' }}>
+    <div className={`dropdown ${isDropdownOpen ? 'is-active' : ''}`} style={{ width: '300px' }}>
       <div className="dropdown-trigger">
         <input
           type="text"
@@ -66,9 +66,11 @@ export const Auto: React.FC<AutoProps> = ({
           value={inputValue}
           data-cy="search-input"
           onFocus={() => {
+            setIsDropdownOpen(true);
             const trimmedValue = inputValue.trim();
-            if (trimmedValue !== '') {
-              setDropdownActive(true);
+            if (trimmedValue === '') {
+              setSuggestions(data); // показуємо всі варіанти при порожньому інпуті
+            } else {
               setSuggestions(
                 data.filter(person =>
                   person.name.toLowerCase().includes(trimmedValue.toLowerCase()),
@@ -77,10 +79,14 @@ export const Auto: React.FC<AutoProps> = ({
             }
           }}
           onChange={e => setInputValue(e.target.value)}
+          onBlur={() => {
+            // Якщо потрібно, можна закривати dropdown при виході з інпуту
+            // setIsDropdownOpen(false);
+          }}
         />
       </div>
 
-      {dropdownActive && (
+      {isDropdownOpen && (
         <div className="dropdown-menu" role="menu">
           <div className="dropdown-content">
             {suggestions.length === 0 ? (
