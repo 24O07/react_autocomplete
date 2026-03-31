@@ -22,17 +22,20 @@ export const Auto: React.FC<AutoProps> = ({
   useEffect(() => {
     const handler = setTimeout(() => {
       const trimmedValue = inputValue.trim();
-      if (trimmedValue  === '') {
-        setSuggestions(data);
+
+      if (trimmedValue === '') {
+        // якщо інпут порожній або тільки пробіли — не показуємо підказок
+        setSuggestions([]);
+        setDropdownActive(false); // закриваємо dropdown
       } else {
+        // фільтруємо тільки непорожній trimmedValue
         const filtered = data.filter(person =>
-          person.name.toLowerCase().includes(inputValue.toLowerCase()),
+          person.name.toLowerCase().includes(trimmedValue.toLowerCase()),
         );
 
         setSuggestions(filtered);
+        setDropdownActive(true); // відкриваємо dropdown лише якщо є текст
       }
-
-      setDropdownActive(true);
     }, debounceTime);
 
     return () => clearTimeout(handler);
@@ -54,23 +57,24 @@ export const Auto: React.FC<AutoProps> = ({
   };
 
   return (
-    <div
-      className={`dropdown ${dropdownActive ? 'is-active' : ''}`}
-      style={{ width: '300px' }}
-    >
+    <div className="dropdown" style={{ width: '300px' }}>
       <div className="dropdown-trigger">
         <input
           type="text"
           className="input"
           placeholder="Enter a part of the name"
           value={inputValue}
-          data-cy="search-input" // <-- додаємо для тестів
+          data-cy="search-input"
           onFocus={() => {
-            if (inputValue === '') {
-              setSuggestions(data);
+            const trimmedValue = inputValue.trim();
+            if (trimmedValue !== '') {
+              setDropdownActive(true);
+              setSuggestions(
+                data.filter(person =>
+                  person.name.toLowerCase().includes(trimmedValue.toLowerCase()),
+                ),
+              );
             }
-
-            setDropdownActive(true);
           }}
           onChange={e => setInputValue(e.target.value)}
         />
@@ -78,12 +82,9 @@ export const Auto: React.FC<AutoProps> = ({
 
       {dropdownActive && (
         <div className="dropdown-menu" role="menu">
-          <div className="dropdown-content" data-cy="suggestions-list">
+          <div className="dropdown-content">
             {suggestions.length === 0 ? (
-              <div
-                className="dropdown-item has-text-danger"
-                data-cy="no-suggestions-message"
-              >
+              <div className="dropdown-item has-text-danger" data-cy="no-suggestions-message">
                 No matching suggestions
               </div>
             ) : (
