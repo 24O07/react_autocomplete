@@ -23,14 +23,11 @@ export const Auto: React.FC<AutoProps> = ({
     const handler = setTimeout(() => {
       const trimmedValue = inputValue.trim();
 
+      // Порожній інпут → показуємо всі пропозиції (якщо dropdown відкритий)
       if (trimmedValue === '') {
-        // Якщо інпут порожній, але відкритий — показуємо всі дані
-        if (isDropdownOpen) {
-          setSuggestions(data);
-        } else {
-          setSuggestions([]);
-        }
+        setSuggestions(isDropdownOpen ? data : []);
       } else {
+        // Фільтрація по триманому значенню
         const filtered = data.filter(person =>
           person.name.toLowerCase().includes(trimmedValue.toLowerCase()),
         );
@@ -41,7 +38,7 @@ export const Auto: React.FC<AutoProps> = ({
     return () => clearTimeout(handler);
   }, [inputValue, data, debounceTime, isDropdownOpen]);
 
-  // Reset selected person if input changes
+  // Скидання вибраної людини при зміні інпуту
   useEffect(() => {
     if (selectedPerson && selectedPerson.name !== inputValue) {
       setSelectedPerson(null);
@@ -68,8 +65,9 @@ export const Auto: React.FC<AutoProps> = ({
           onFocus={() => {
             setIsDropdownOpen(true);
             const trimmedValue = inputValue.trim();
+
             if (trimmedValue === '') {
-              setSuggestions(data); // показуємо всі варіанти при порожньому інпуті
+              setSuggestions(data);
             } else {
               setSuggestions(
                 data.filter(person =>
@@ -78,19 +76,18 @@ export const Auto: React.FC<AutoProps> = ({
               );
             }
           }}
-          onChange={e => setInputValue(e.target.value)}
-          onBlur={() => {
-            // Якщо потрібно, можна закривати dropdown при виході з інпуту
-            // setIsDropdownOpen(false);
-          }}
+          onChange={(e) => setInputValue(e.target.value)}
         />
       </div>
 
       {isDropdownOpen && (
         <div className="dropdown-menu" role="menu">
-          <div className="dropdown-content">
+          <div className="dropdown-content" data-cy="suggestions-list">
             {suggestions.length === 0 ? (
-              <div className="dropdown-item has-text-danger" data-cy="no-suggestions-message">
+              <div
+                className="dropdown-item has-text-danger"
+                data-cy="no-suggestions-message"
+              >
                 No matching suggestions
               </div>
             ) : (
